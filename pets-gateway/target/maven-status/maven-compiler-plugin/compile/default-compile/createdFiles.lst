@@ -1,0 +1,5 @@
+com/pets/gateway/GatewayApplication.class
+com/pets/gateway/filter/JwtAuthGlobalFilter.class
+com/pets/gateway/config/RouteConfig.class
+com/pets/gateway/util/RouteUtil.class
+com/pets/gateway/properties/WhiteListProperties.class

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Spring Boot 4.0.8 父 POM -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.8</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.pets</groupId>
+    <artifactId>pets-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>宠老板复刻 · 父 POM</name>
+
+    <modules>
+        <module>pets-common</module>
+        <module>pets-id-generator</module>
+        <module>pets-gateway</module>
+        <module>services/auth-service</module>
+        <module>services/shop-service</module>
+        <module>services/system-service</module>
+        <module>services/trade-service</module>
+        <module>services/goods-service</module>
+        <module>services/stock-service</module>
+        <module>services/member-service</module>
+        <module>services/market-service</module>
+        <module>services/report-service</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Spring Cloud 2025.1.x -->
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
+        <!-- Spring Cloud Alibaba 2025.1.0.0 -->
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
+        <!-- MyBatis-Plus 3.5.17 (Spring Boot 4 starter) -->
+        <mybatis-plus.version>3.5.17</mybatis-plus.version>
+        <!-- JJWT 0.13.0 -->
+        <jjwt.version>0.13.0</jjwt.version>
+        <!-- Lombok -->
+        <lombok.version>1.18.38</lombok.version>
+        <!-- JDK 25 默认不再运行注解处理器, 显式开启以使 Lombok(@Data 等) 生效 -->
+        <maven.compiler.proc>full</maven.compiler.proc>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud BOM -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Spring Cloud Alibaba BOM -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- MyBatis-Plus (Spring Boot 4) -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-jsqlparser</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <!-- JJWT -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <!-- 内部模块 -->
+            <dependency>
+                <groupId>com.pets</groupId>
+                <artifactId>pets-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pets</groupId>
+                <artifactId>pets-id-generator</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

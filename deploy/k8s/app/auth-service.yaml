@@ -1,0 +1,108 @@
+---
+# ============================================================
+# auth-service 部署清单
+# 端口 9001, 节点 w1
+# 跨 namespace 访问 middleware 的 MySQL/Redis/MongoDB/Nacos
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: app
+  labels:
+    app: auth-service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      nodeSelector:
+        app-host: w1
+      containers:
+      - name: auth-service
+        # 本地构建镜像, 不从远程拉取
+        image: pets/auth-service:1.0.0
+        imagePullPolicy: IfNotPresent
+        env:
+        # MySQL (跨 namespace: app -> middleware)
+        - name: DB_HOST
+          value: "mysql.middleware.svc.cluster.local"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "pets"
+        - name: DB_USER
+          value: "root"
+        - name: DB_PASSWORD
+          value: "root"
+        # Redis
+        - name: REDIS_HOST
+          value: "redis.middleware.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        # MongoDB
+        - name: MONGO_HOST
+          value: "mongodb.middleware.svc.cluster.local"
+        - name: MONGO_PORT
+          value: "27017"
+        - name: MONGO_USER
+          value: "root"
+        - name: MONGO_PASSWORD
+          value: "root"
+        - name: MONGO_DB
+          value: "pets"
+        # Nacos
+        - name: NACOS_ADDR
+          value: "nacos.middleware.svc.cluster.local:8848"
+        - name: NACOS_USERNAME
+          value: "nacos"
+        - name: NACOS_PASSWORD
+          value: "nacos"
+        # JWT
+        - name: JWT_SECRET
+          value: "pets-chonglaoban-jwt-secret-key-2026-must-be-32-bytes"
+        - name: JWT_EXPIRE
+          value: "720"
+        ports:
+        - containerPort: 9001
+          name: http
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 512Mi
+          requests:
+            cpu: 150m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9001
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9001
+          initialDelaySeconds: 240
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: app
+spec:
+  selector:
+    app: auth-service
+  ports:
+  - name: http
+    port: 9001
+    targetPort: 9001

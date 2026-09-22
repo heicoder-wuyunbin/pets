@@ -1,0 +1,6 @@
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/config/IdGeneratorAutoConfiguration.java
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/entity/IdSegment.java
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/properties/IdGeneratorProperties.java
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/repo/SegmentRepository.java
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/service/IdService.java
+/Users/wuyunbin/workspace/pets/pets-id-generator/src/main/java/com/pets/id/service/RedisSegmentIdService.java

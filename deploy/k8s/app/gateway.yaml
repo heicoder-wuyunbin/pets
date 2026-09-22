@@ -1,0 +1,96 @@
+---
+# ============================================================
+# pets-gateway 部署清单
+# 端口 9000, 节点 w1, NodePort 30900 对外暴露
+# 通过服务 URL 路由到各业务服务
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pets-gateway
+  namespace: app
+  labels:
+    app: pets-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pets-gateway
+  template:
+    metadata:
+      labels:
+        app: pets-gateway
+    spec:
+      nodeSelector:
+        app-host: w1
+      containers:
+      - name: pets-gateway
+        image: pets/gateway:1.0.0
+        imagePullPolicy: IfNotPresent
+        env:
+        # 各业务服务 URL (跨 namespace: app 内服务互访)
+        - name: AUTH_SERVICE_URL
+          value: "http://auth-service.app.svc.cluster.local:9001"
+        - name: SHOP_SERVICE_URL
+          value: "http://shop-service.app.svc.cluster.local:9002"
+        - name: SYSTEM_SERVICE_URL
+          value: "http://system-service.app.svc.cluster.local:9003"
+        - name: TRADE_SERVICE_URL
+          value: "http://trade-service.app.svc.cluster.local:9004"
+        - name: GOODS_SERVICE_URL
+          value: "http://goods-service.app.svc.cluster.local:9005"
+        - name: STOCK_SERVICE_URL
+          value: "http://stock-service.app.svc.cluster.local:9006"
+        - name: MEMBER_SERVICE_URL
+          value: "http://member-service.app.svc.cluster.local:9007"
+        - name: MARKET_SERVICE_URL
+          value: "http://market-service.app.svc.cluster.local:9008"
+        - name: REPORT_SERVICE_URL
+          value: "http://report-service.app.svc.cluster.local:9009"
+        # Nacos (跨 namespace)
+        - name: NACOS_ADDR
+          value: "nacos.middleware.svc.cluster.local:8848"
+        - name: NACOS_USERNAME
+          value: "nacos"
+        - name: NACOS_PASSWORD
+          value: "nacos"
+        ports:
+        - containerPort: 9000
+          name: http
+        resources:
+          limits:
+            cpu: "500m"
+            memory: 512Mi
+          requests:
+            cpu: 150m
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 9000
+          initialDelaySeconds: 240
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pets-gateway
+  namespace: app
+spec:
+  type: NodePort
+  selector:
+    app: pets-gateway
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+    nodePort: 30900

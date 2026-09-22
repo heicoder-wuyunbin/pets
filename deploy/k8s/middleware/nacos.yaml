@@ -1,0 +1,143 @@
+---
+# ============================================================
+# Nacos 3.2.4 standalone - 使用外部 MySQL 持久化
+# 部署到 k3s-worker2 (app-host=w2)
+# 注意: Nacos 3.x 与 2.x 环境变量映射不同:
+#   - spring.sql.init.platform (非 spring.datasource.platform)
+#   - db.url.0 / db.user / db.password (非 db.user.0)
+#   - MYSQL_SERVICE_* 系列不再生效, 改用 DB_URL_0 / DB_USER / DB_PASSWORD
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nacos-cm
+  namespace: middleware
+data:
+  MODE: "standalone"
+  PREFER_HOST_MODE: "hostname"
+  # 数据库配置 (Nacos 3.x 用 spring.sql.init.platform + db.* 覆盖)
+  SPRING_SQL_INIT_PLATFORM: "mysql"
+  DB_NUM: "1"
+  DB_URL_0: "jdbc:mysql://mysql.middleware.svc.cluster.local:3306/nacos?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
+  DB_USER: "nacos"
+  DB_PASSWORD: "nacos"
+  # 鉴权 (生产必开)
+  NACOS_AUTH_ENABLE: "true"
+  NACOS_AUTH_IDENTITY_KEY: "nacos"
+  NACOS_AUTH_IDENTITY_VALUE: "nacos"
+  NACOS_AUTH_TOKEN: "SecretKey012345678901234567890123456789012345678901234567890123456789"
+  NACOS_AUTH_TOKEN_EXPIRE_SECONDS: "18000"
+  # JVM
+  JVM_XMS: "512m"
+  JVM_XMX: "512m"
+  JVM_XMN: "256m"
+  # 时区
+  NACOS_SERVER_TZ: "Asia/Shanghai"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nacos
+  namespace: middleware
+  labels:
+    app: nacos
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+    spec:
+      nodeSelector:
+        app-host: w2
+      containers:
+      - name: nacos
+        image: nacos/nacos-server:v3.2.4
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: nacos-cm
+        ports:
+        - containerPort: 8848
+          name: http
+        - containerPort: 8080
+          name: console
+        - containerPort: 9848
+          name: grpc-client
+        - containerPort: 9849
+          name: grpc-raft
+        resources:
+          limits:
+            cpu: "1"
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        # Nacos 3.x 健康检查端点路径已变, 用 TCP socket 探针检查主端口
+        readinessProbe:
+          tcpSocket:
+            port: 8848
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 30
+        livenessProbe:
+          tcpSocket:
+            port: 8848
+          initialDelaySeconds: 120
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nacos
+  namespace: middleware
+spec:
+  type: NodePort
+  selector:
+    app: nacos
+  ports:
+  - name: http
+    port: 8848
+    targetPort: 8848
+    nodePort: 30848
+  - name: console
+    port: 8080
+    targetPort: 8080
+    nodePort: 30880
+  - name: grpc-client
+    port: 9848
+    targetPort: 9848
+    nodePort: 30948
+  - name: grpc-raft
+    port: 9849
+    targetPort: 9849
+    nodePort: 30949
+---
+# Headless service, 供集群内服务发现使用稳定 DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: nacos-headless
+  namespace: middleware
+spec:
+  clusterIP: None
+  selector:
+    app: nacos
+  ports:
+  - name: http
+    port: 8848
+    targetPort: 8848
+  - name: console
+    port: 8080
+    targetPort: 8080
+  - name: grpc-client
+    port: 9848
+    targetPort: 9848
+  - name: grpc-raft
+    port: 9849
+    targetPort: 9849
