@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, DatePicker, Table, Statistic, Row, Col, Space, Spin, Empty } from 'antd';
+import { DatePicker, Table, Space, Spin, Empty } from 'antd';
+import { PageContainer, ProCard, StatisticCard } from '@ant-design/pro-components';
 import { reportDaily } from '@/api/report';
 import type { DailyReportVO } from '@/types/m6';
 
@@ -27,8 +28,8 @@ export default function ReportDaily() {
   const avgOrder = totalOrder > 0 ? totalSale / totalOrder : 0;
 
   return (
-    <div>
-      <Card style={{ marginBottom: 16 }}>
+    <PageContainer title="营业报表">
+      <ProCard style={{ marginBottom: 16 }}>
         <Space>
           <span>日期范围：</span>
           <RangePicker
@@ -38,17 +39,17 @@ export default function ReportDaily() {
           />
           <a onClick={loadData}>查询</a>
         </Space>
-      </Card>
+      </ProCard>
 
-      <Row gutter={16} style={{ marginBottom: 16 }}>
-        <Col span={6}><Card><Statistic title="区间销售额" value={totalSale} prefix="¥" precision={2} /></Card></Col>
-        <Col span={6}><Card><Statistic title="区间订单数" value={totalOrder} /></Card></Col>
-        <Col span={6}><Card><Statistic title="区间退款" value={totalRefund} prefix="¥" precision={2} valueStyle={{ color: '#cf1322' }} /></Card></Col>
-        <Col span={6}><Card><Statistic title="区间客单价" value={avgOrder} prefix="¥" precision={2} /></Card></Col>
-      </Row>
+      <StatisticCard.Group direction="row" style={{ marginBottom: 16 }}>
+        <StatisticCard statistic={{ title: '区间销售额', value: totalSale, prefix: '¥', precision: 2 }} />
+        <StatisticCard statistic={{ title: '区间订单数', value: totalOrder }} />
+        <StatisticCard statistic={{ title: '区间退款', value: totalRefund, prefix: '¥', precision: 2, valueStyle: { color: '#cf1322' } }} />
+        <StatisticCard statistic={{ title: '区间客单价', value: avgOrder, prefix: '¥', precision: 2 }} />
+      </StatisticCard.Group>
 
-      <Card title="每日明细">
-        {loading ? <Spin /> : data.length === 0 ? <Empty /> : (
+      <ProCard title="每日明细">
+        {loading ? <Spin style={{ display: 'block', margin: '40px auto' }} /> : data.length === 0 ? <Empty /> : (
           <Table
             rowKey="reportDate"
             dataSource={data}
@@ -63,7 +64,7 @@ export default function ReportDaily() {
             ]}
           />
         )}
-      </Card>
-    </div>
+      </ProCard>
+    </PageContainer>
   );
 }

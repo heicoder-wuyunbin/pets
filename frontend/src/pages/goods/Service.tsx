@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  Card, Table, Tag, Input, Select, Button, Space, Modal, Form, InputNumber,
+  Tag, Input, Select, Button, Space, Modal, Form, InputNumber,
   message,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
 import {
   listServiceCategory, saveServiceCategory, pageService, saveService, setServiceStatus,
 } from '@/api/service';
@@ -75,7 +76,7 @@ export default function Service() {
   };
 
   return (
-    <Card>
+    <PageContainer title="服务管理">
       <Space wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="服务分类"
@@ -101,7 +102,9 @@ export default function Service() {
         <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>新增服务</Button>
       </Space>
 
-      <Table
+      <ProTable<ServiceVO>
+        search={false}
+        options={{ reload: loadData, density: true, setting: true }}
         rowKey="id"
         loading={loading}
         dataSource={data}
@@ -113,12 +116,12 @@ export default function Service() {
         }}
         columns={[
           { title: '服务名称', dataIndex: 'name' },
-          { title: '价格', dataIndex: 'price', width: 100, render: (v: number) => `¥${v?.toFixed(2)}` },
+          { title: '价格', dataIndex: 'price', width: 100, render: (_, r: ServiceVO) => `¥${r.price?.toFixed(2)}` },
           { title: '时长(分)', dataIndex: 'duration', width: 90 },
-          { title: '可用次卡', dataIndex: 'canCard', width: 90, render: (v: number) => v === 1 ? '是' : '否' },
+          { title: '可用次卡', dataIndex: 'canCard', width: 90, render: (_, r: ServiceVO) => r.canCard === 1 ? '是' : '否' },
           {
             title: '状态', dataIndex: 'status', width: 80,
-            render: (s: number) => <Tag color={s === 1 ? 'green' : 'default'}>{s === 1 ? '上架' : '下架'}</Tag>,
+            render: (_, r: ServiceVO) => <Tag color={r.status === 1 ? 'green' : 'default'}>{r.status === 1 ? '上架' : '下架'}</Tag>,
           },
           { title: '创建时间', dataIndex: 'createTime', width: 170 },
           {
@@ -185,6 +188,6 @@ export default function Service() {
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </PageContainer>
   );
 }

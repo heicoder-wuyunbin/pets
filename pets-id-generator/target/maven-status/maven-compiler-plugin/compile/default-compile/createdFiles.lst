@@ -1,7 +1,0 @@
-com/pets/id/repo/SegmentRepository.class
-com/pets/id/service/RedisSegmentIdService.class
-com/pets/id/properties/IdGeneratorProperties.class
-com/pets/id/service/RedisSegmentIdService$Segment.class
-com/pets/id/config/IdGeneratorAutoConfiguration.class
-com/pets/id/entity/IdSegment.class
-com/pets/id/service/IdService.class

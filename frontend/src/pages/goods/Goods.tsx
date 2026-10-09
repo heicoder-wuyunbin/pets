@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  Card, Table, Tag, Input, Select, Button, Space, Modal, Form, InputNumber,
+  Tag, Input, Select, Button, Space, Modal, Form, InputNumber,
   message,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
 import {
   listGoodsCategory, pageGoods, saveGoods, setGoodsStatus,
 } from '@/api/goods';
@@ -73,7 +74,7 @@ export default function Goods() {
   };
 
   return (
-    <Card>
+    <PageContainer title="商品管理">
       <Space wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="商品分类"
@@ -98,7 +99,9 @@ export default function Goods() {
         <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>新增商品</Button>
       </Space>
 
-      <Table
+      <ProTable<GoodsVO>
+        search={false}
+        options={{ reload: loadData, density: true, setting: true }}
         rowKey="id"
         loading={loading}
         dataSource={data}
@@ -112,12 +115,12 @@ export default function Goods() {
           { title: '商品名称', dataIndex: 'name' },
           { title: '条码', dataIndex: 'barcode', width: 140 },
           { title: '单位', dataIndex: 'unit', width: 70 },
-          { title: '零售价', dataIndex: 'retailPrice', width: 100, render: (v: number) => `¥${v?.toFixed(2)}` },
-          { title: '成本价', dataIndex: 'costPrice', width: 100, render: (v: number) => `¥${v?.toFixed(2)}` },
-          { title: 'SKU数', dataIndex: 'skus', width: 80, render: (s: any[]) => s?.length || 0 },
+          { title: '零售价', dataIndex: 'retailPrice', width: 100, render: (_, r: GoodsVO) => `¥${r.retailPrice?.toFixed(2)}` },
+          { title: '成本价', dataIndex: 'costPrice', width: 100, render: (_, r: GoodsVO) => `¥${r.costPrice?.toFixed(2)}` },
+          { title: 'SKU数', dataIndex: 'skus', width: 80, render: (_, r: GoodsVO) => (r.skus as any[])?.length || 0 },
           {
             title: '状态', dataIndex: 'status', width: 80,
-            render: (s: number) => <Tag color={s === 1 ? 'green' : 'default'}>{s === 1 ? '上架' : '下架'}</Tag>,
+            render: (_, r: GoodsVO) => <Tag color={r.status === 1 ? 'green' : 'default'}>{r.status === 1 ? '上架' : '下架'}</Tag>,
           },
           { title: '创建时间', dataIndex: 'createTime', width: 170 },
           {
@@ -187,6 +190,6 @@ export default function Goods() {
           </Form.List>
         </Form>
       </Modal>
-    </Card>
+    </PageContainer>
   );
 }

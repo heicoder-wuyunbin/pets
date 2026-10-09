@@ -1,0 +1,51 @@
+# ===== Java / Maven 构建产物 =====
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# ===== 日志与临时文件 =====
+*.log
+*.logs
+*.tmp
+*.swp
+*~
+
+# ===== Node / 前端（frontend 为 Vite + React 项目）=====
+node_modules/
+**/node_modules/
+frontend/dist/
+dist/
+*.tsbuildinfo
+.pnpm-store/
+.eslintcache
+.stylelintcache
+
+# 本地环境变量（保留示例文件 .env.example）
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# ===== IDE / 编辑器 =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+
+# ===== 系统文件 =====
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini

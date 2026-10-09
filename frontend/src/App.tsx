@@ -22,6 +22,7 @@ import MemberList from '@/pages/member/List';
 import MemberCard from '@/pages/member/Card';
 import MemberTimesCard from '@/pages/member/TimesCard';
 import MemberPoints from '@/pages/member/Points';
+import Cashbook from '@/pages/trade/Cashbook';
 import MarketingList from '@/pages/marketing/List';
 import ReportDaily from '@/pages/report/Daily';
 import ReportStat from '@/pages/report/Stat';
@@ -61,7 +62,7 @@ export default function RootApp() {
                 <Route path="/washreport" element={<ComingSoon title="洗护报告" />} />
                 <Route path="/foster" element={<ComingSoon title="寄养管理" />} />
                 <Route path="/reminder" element={<ComingSoon title="提醒" />} />
-                <Route path="/accounting" element={<ComingSoon title="记账本" />} />
+                <Route path="/accounting" element={<Cashbook />} />
                 <Route path="/petpay" element={<ComingSoon title="宠付宝" />} />
                 <Route path="/referral" element={<ComingSoon title="转诊管理" />} />
                 {/* 商品服务 */}

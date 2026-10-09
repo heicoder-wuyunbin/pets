@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import {
-  Card, Table, Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker,
+  Button, Space, Modal, Form, Input, InputNumber, Select, DatePicker,
   Switch, message, Tag,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
 import {
   pageMarketing, saveMarketing, setMarketingStatus,
 } from '@/api/marketing';
@@ -79,7 +80,7 @@ export default function MarketingList() {
   };
 
   return (
-    <Card title="营销活动">
+    <PageContainer title="营销管理">
       <Space style={{ marginBottom: 16 }}>
         <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>新建活动</Button>
         <Select
@@ -94,7 +95,9 @@ export default function MarketingList() {
         />
       </Space>
 
-      <Table
+      <ProTable<MarketingVO>
+        search={false}
+        options={{ reload: loadData, density: true, setting: true }}
         rowKey="id"
         loading={loading}
         dataSource={data}
@@ -108,21 +111,21 @@ export default function MarketingList() {
           { title: '活动名称', dataIndex: 'name', width: 180 },
           {
             title: '类型', dataIndex: 'type', width: 80,
-            render: (t: number) => <Tag color={t === 1 ? 'blue' : 'purple'}>{TYPE_MAP[t]}</Tag>,
+            render: (_, r: MarketingVO) => <Tag color={r.type === 1 ? 'blue' : 'purple'}>{TYPE_MAP[r.type]}</Tag>,
           },
           {
             title: '规则', width: 180,
-            render: (_, r) => {
+            render: (_, r: MarketingVO) => {
               if (r.type === 1) return `满${r.threshold || 0}元减${r.discountValue || 0}元`;
               return `打${(r.discountValue * 10).toFixed(1)}折`;
             },
           },
-          { title: '限定商品', dataIndex: 'goodsIds', width: 140, render: (v: string) => v || '全场通用' },
+          { title: '限定商品', dataIndex: 'goodsIds', width: 140, render: (_, r: MarketingVO) => r.goodsIds || '全场通用' },
           { title: '开始时间', dataIndex: 'startTime', width: 160 },
           { title: '结束时间', dataIndex: 'endTime', width: 160 },
           {
             title: '状态', dataIndex: 'status', width: 90,
-            render: (s: number) => (s === 1 ? <Tag color="green">启用</Tag> : <Tag>停用</Tag>),
+            render: (_, r: MarketingVO) => (r.status === 1 ? <Tag color="green">启用</Tag> : <Tag>停用</Tag>),
           },
           {
             title: '操作', width: 160,
@@ -192,6 +195,6 @@ export default function MarketingList() {
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </PageContainer>
   );
 }

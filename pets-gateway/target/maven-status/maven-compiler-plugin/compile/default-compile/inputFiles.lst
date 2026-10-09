@@ -1,5 +1,0 @@
-/Users/wuyunbin/workspace/pets/pets-gateway/src/main/java/com/pets/gateway/GatewayApplication.java
-/Users/wuyunbin/workspace/pets/pets-gateway/src/main/java/com/pets/gateway/config/RouteConfig.java
-/Users/wuyunbin/workspace/pets/pets-gateway/src/main/java/com/pets/gateway/filter/JwtAuthGlobalFilter.java
-/Users/wuyunbin/workspace/pets/pets-gateway/src/main/java/com/pets/gateway/properties/WhiteListProperties.java
-/Users/wuyunbin/workspace/pets/pets-gateway/src/main/java/com/pets/gateway/util/RouteUtil.java

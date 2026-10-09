@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Card, Segmented, Table, InputNumber, Space, DatePicker, Button, Spin, Empty } from 'antd';
+import { Segmented, Table, InputNumber, Space, DatePicker, Button, Spin, Empty } from 'antd';
+import { PageContainer, ProCard } from '@ant-design/pro-components';
 import { reportSalesRank } from '@/api/report';
 import type { RankVO } from '@/types/m6';
 
@@ -33,33 +34,35 @@ export default function ReportRank() {
   ];
 
   return (
-    <Card title="销售排行">
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Segmented
-          value={type}
-          onChange={(v) => setType(v as any)}
-          options={[
-            { value: 'goods', label: '商品销量' },
-            { value: 'service', label: '服务次数' },
-            { value: 'clerk', label: '员工业绩' },
-          ]}
-        />
-        <span>Top:</span>
-        <InputNumber min={1} max={100} value={topN} onChange={(v) => setTopN(v || 10)} />
-        <RangePicker value={range} onChange={(v) => setRange(v as any)} />
-        <Button type="primary" onClick={loadData}>查询</Button>
-      </Space>
-
-      <Spin spinning={loading}>
-        {data.length === 0 ? <Empty /> : (
-          <Table
-            rowKey="itemId"
-            dataSource={data}
-            pagination={false}
-            columns={columns as any}
+    <PageContainer title="销售排行">
+      <ProCard title="销售排行">
+        <Space wrap style={{ marginBottom: 16 }}>
+          <Segmented
+            value={type}
+            onChange={(v) => setType(v as any)}
+            options={[
+              { value: 'goods', label: '商品销量' },
+              { value: 'service', label: '服务次数' },
+              { value: 'clerk', label: '员工业绩' },
+            ]}
           />
-        )}
-      </Spin>
-    </Card>
+          <span>Top:</span>
+          <InputNumber min={1} max={100} value={topN} onChange={(v) => setTopN(v || 10)} />
+          <RangePicker value={range} onChange={(v) => setRange(v as any)} />
+          <Button type="primary" onClick={loadData}>查询</Button>
+        </Space>
+
+        <Spin spinning={loading}>
+          {data.length === 0 ? <Empty /> : (
+            <Table
+              rowKey="itemId"
+              dataSource={data}
+              pagination={false}
+              columns={columns as any}
+            />
+          )}
+        </Spin>
+      </ProCard>
+    </PageContainer>
   );
 }

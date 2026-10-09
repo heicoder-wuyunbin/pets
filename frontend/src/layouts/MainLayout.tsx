@@ -1,44 +1,19 @@
 import { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Space } from 'antd';
+import { ProLayout } from '@ant-design/pro-components';
 import {
-  DashboardOutlined,
-  CalendarOutlined,
-  ShoppingCartOutlined,
-  OrderedListOutlined,
-  ScheduleOutlined,
-  FileTextOutlined,
-  HomeOutlined,
-  BellOutlined,
-  AccountBookOutlined,
-  WalletOutlined,
-  ShareAltOutlined,
-  AppstoreOutlined,
-  ToolOutlined,
-  DatabaseOutlined,
-  AuditOutlined,
-  TeamOutlined,
-  UserOutlined,
-  CreditCardOutlined,
-  GiftOutlined,
-  StarOutlined,
-  ThunderboltOutlined,
-  BarChartOutlined,
-  FundOutlined,
-  TrophyOutlined,
-  SettingOutlined,
-  PrinterOutlined,
-  NotificationOutlined,
-  DeleteOutlined,
-  LogoutOutlined,
-  ShopOutlined,
-  GlobalOutlined,
-  MobileOutlined,
+  DashboardOutlined, CalendarOutlined, ShoppingCartOutlined, OrderedListOutlined,
+  ScheduleOutlined, FileTextOutlined, HomeOutlined, BellOutlined, AccountBookOutlined,
+  WalletOutlined, ShareAltOutlined, AppstoreOutlined, ToolOutlined, DatabaseOutlined,
+  AuditOutlined, UserOutlined, TeamOutlined, CreditCardOutlined, GiftOutlined,
+  StarOutlined, ThunderboltOutlined, BarChartOutlined, FundOutlined, TrophyOutlined,
+  SettingOutlined, PrinterOutlined, NotificationOutlined, DeleteOutlined, LogoutOutlined,
+  ShopOutlined, GlobalOutlined, MobileOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { Dropdown, Avatar, type MenuProps } from 'antd';
+import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
-const { Header, Sider, Content } = Layout;
-
+// v70 功能结构菜单（与宠老板网页版 7.0 同构：模块名称、分组一致）
 const menuItems = [
   { key: '/survey', icon: <DashboardOutlined />, label: '店铺概况' },
   {
@@ -145,91 +120,71 @@ const menuItems = [
   },
 ];
 
+// 将本地菜单映射为 Ant Design Pro 的 route 结构（保留分组与功能结构）
+const proRoutes = menuItems.map((it) => {
+  if ('children' in it && it.children) {
+    return {
+      path: it.children[0].key,
+      name: it.label as string,
+      icon: it.icon,
+      routes: it.children.map((c) => ({
+        path: c.key,
+        name: c.label as string,
+        icon: c.icon,
+      })),
+    };
+  }
+  return { path: it.key, name: it.label as string, icon: it.icon };
+});
+
+const routeData = { path: '/', routes: proRoutes };
+
 export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
 
-  const selectedKey = location.pathname;
-  const siderWidth = collapsed ? 80 : 208;
-
-  // 默认展开包含当前路由的子菜单组
-  const openKeys = menuItems
-    .filter((item) => 'children' in item && item.children?.some((c) => c.key === selectedKey))
-    .map((item) => item.key);
+  const userMenu: MenuProps = {
+    items: [{ key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }],
+    onClick: ({ key }) => {
+      if (key === 'logout') {
+        logout();
+        navigate('/login');
+      }
+    },
+  };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        breakpoint="lg"
-        width={208}
-        style={{ overflow: 'auto', height: '100vh', position: 'fixed', left: 0, top: 0, bottom: 0 }}
-      >
-        <div
-          style={{
-            height: 56,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#fff',
-            fontSize: collapsed ? 14 : 16,
-            fontWeight: 600,
-          }}
-        >
-          {collapsed ? '🐾' : '🐾 宠老板'}
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[selectedKey]}
-          defaultOpenKeys={openKeys}
-          items={menuItems}
-          onClick={({ key }) => navigate(key)}
-          style={{ borderRight: 0 }}
-        />
-      </Sider>
-      <Layout style={{ marginLeft: siderWidth, transition: 'margin-left 0.2s' }}>
-        <Header
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 9,
-            width: '100%',
-            padding: '0 24px',
-            background: '#fff',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            boxShadow: '0 1px 4px rgba(0,21,41,0.08)',
-          }}
-        >
-          <Dropdown
-            menu={{
-              items: [{ key: 'logout', icon: <LogoutOutlined />, label: '退出登录' }],
-              onClick: ({ key }) => {
-                if (key === 'logout') {
-                  logout();
-                  navigate('/login');
-                }
-              },
-            }}
-          >
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar style={{ backgroundColor: '#1677ff' }} icon={<UserOutlined />} />
-              <span>{user?.shopName || '未登录'}</span>
-            </Space>
-          </Dropdown>
-        </Header>
-        <Content style={{ margin: '16px 24px 24px' }}>
-          <div style={{ background: '#fff', padding: 24, borderRadius: 8, minHeight: 360 }}>
-            <Outlet />
-          </div>
-        </Content>
-      </Layout>
-    </Layout>
+    <ProLayout
+      title="宠老板"
+      logo={collapsed ? '🐾' : '🐾 宠老板'}
+      layout="mix"
+      fixedHeader
+      fixSiderbar
+      siderWidth={208}
+      route={routeData}
+      location={{ pathname: location.pathname }}
+      collapsed={collapsed}
+      onCollapse={setCollapsed}
+      menuItemRender={(item, dom) => {
+        if (item.path && item.path.startsWith('/')) {
+          return <Link to={item.path}>{dom}</Link>;
+        }
+        return dom;
+      }}
+      actionsRender={(props) => {
+        if (props.isMobile) return [];
+        return [
+          <Dropdown key="user" menu={userMenu}>
+            <Avatar style={{ background: '#1677ff', cursor: 'pointer' }} icon={<UserOutlined />} />
+          </Dropdown>,
+        ];
+      }}
+    >
+      <div style={{ padding: 24, minHeight: '100%' }}>
+        <Outlet />
+      </div>
+    </ProLayout>
   );
 }

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  Card, Table, Input, Button, Space, Modal, Form, InputNumber, DatePicker, Select,
-  Drawer, Descriptions, message, Popconfirm,
+  Card, Input, Button, Space, Modal, Form, InputNumber, DatePicker, Select,
+  Drawer, Descriptions, message, Popconfirm, Table,
 } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
+import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import {
   pageMember, getMemberDetail, saveMember, deleteMember,
 } from '@/api/member';
-import type { MemberListVO, MemberDetailVO, MemberPageReq, MemberSaveReq } from '@/types/m5';
+import type { MemberListVO, MemberDetailVO, MemberSaveReq } from '@/types/m5';
 
 const GENDER_MAP: Record<number, string> = { 0: '未知', 1: '男', 2: '女' };
 
@@ -15,25 +17,17 @@ const GENDER_MAP: Record<number, string> = { 0: '未知', 1: '男', 2: '女' };
 const fmtDate = (v: any): string | undefined => (v ? v.format('YYYY-MM-DD') : undefined);
 
 export default function MemberList() {
-  const [data, setData] = useState<MemberListVO[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [params, setParams] = useState<MemberPageReq>({ pageNum: 1, pageSize: 20 });
+  const actionRef = useRef<ActionType>();
+  const [keyword, setKeyword] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<MemberDetailVO | null>(null);
   const [detail, setDetail] = useState<MemberDetailVO | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [form] = Form.useForm<MemberSaveReq>();
 
-  const loadData = () => {
-    setLoading(true);
-    pageMember(params).then((res) => {
-      setData(res.data);
-      setTotal((res.page as any)?.total || 0);
-    }).finally(() => setLoading(false));
-  };
-
-  useEffect(() => { loadData(); }, [params]);
+  useEffect(() => {
+    actionRef.current?.reload();
+  }, [keyword]);
 
   const openAdd = () => {
     setEditRecord(null);
@@ -70,13 +64,13 @@ export default function MemberList() {
     await saveMember(payload);
     message.success('保存成功');
     setModalOpen(false);
-    loadData();
+    actionRef.current?.reload();
   };
 
   const handleDelete = async (id: number) => {
     await deleteMember(id);
     message.success('已删除');
-    loadData();
+    actionRef.current?.reload();
   };
 
   const showDetail = async (id: number) => {
@@ -85,51 +79,63 @@ export default function MemberList() {
     setDetailVisible(true);
   };
 
-  return (
-    <Card>
-      <Space wrap style={{ marginBottom: 16 }}>
-        <Input.Search
-          placeholder="姓名/手机号"
-          allowClear
-          style={{ width: 220 }}
-          onSearch={(v) => setParams({ ...params, pageNum: 1, keyword: v })}
-        />
-        <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>新增会员</Button>
-      </Space>
+  const columns: ProColumns<MemberListVO>[] = [
+    { title: '姓名', dataIndex: 'name', width: 100 },
+    { title: '手机号', dataIndex: 'mobile', width: 130 },
+    { title: '性别', dataIndex: 'gender', width: 70, render: (_, r: MemberListVO) => GENDER_MAP[r.gender] },
+    { title: '等级', dataIndex: 'memberLevel', width: 70, render: (_, r: MemberListVO) => `Lv.${r.memberLevel}` },
+    { title: '标签', dataIndex: 'tags', width: 120, ellipsis: true },
+    { title: '余额', dataIndex: 'balance', width: 100, render: (_, r: MemberListVO) => `¥${r.balance?.toFixed(2)}` },
+    { title: '积分', dataIndex: 'points', width: 80 },
+    { title: '累计消费', dataIndex: 'totalConsume', width: 110, render: (_, r: MemberListVO) => `¥${r.totalConsume?.toFixed(2)}` },
+    { title: '创建时间', dataIndex: 'createTime', width: 170, search: false },
+    {
+      title: '操作', width: 180, key: 'action', search: false,
+      render: (_, r: MemberListVO) => (
+        <Space>
+          <a onClick={() => showDetail(r.id)}>详情</a>
+          <a onClick={() => openEdit(r)}>编辑</a>
+          <Popconfirm title="确认删除该会员？" onConfirm={() => handleDelete(r.id)}>
+            <a style={{ color: 'red' }}>删除</a>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
 
-      <Table
+  return (
+    <PageContainer title="客户管理">
+      <ProTable<MemberListVO>
         rowKey="id"
-        loading={loading}
-        dataSource={data}
-        pagination={{
-          current: params.pageNum,
-          pageSize: params.pageSize,
-          total,
-          onChange: (page, pageSize) => setParams({ ...params, pageNum: page, pageSize }),
+        actionRef={actionRef}
+        columns={columns}
+        search={false}
+        options={{ reload: true, density: true, setting: true }}
+        toolbar={{
+          title: '会员列表',
+          actions: [
+            <Input.Search
+              key="keyword"
+              placeholder="姓名/手机号"
+              allowClear
+              style={{ width: 220 }}
+              onSearch={(v) => setKeyword(v)}
+            />,
+            <Button key="add" type="primary" icon={<PlusOutlined />} onClick={openAdd}>新增会员</Button>,
+          ],
         }}
-        columns={[
-          { title: '姓名', dataIndex: 'name', width: 100 },
-          { title: '手机号', dataIndex: 'mobile', width: 130 },
-          { title: '性别', dataIndex: 'gender', width: 70, render: (g: number) => GENDER_MAP[g] },
-          { title: '等级', dataIndex: 'memberLevel', width: 70, render: (l: number) => `Lv.${l}` },
-          { title: '标签', dataIndex: 'tags', width: 120 },
-          { title: '余额', dataIndex: 'balance', width: 100, render: (v: number) => `¥${v?.toFixed(2)}` },
-          { title: '积分', dataIndex: 'points', width: 80 },
-          { title: '累计消费', dataIndex: 'totalConsume', width: 110, render: (v: number) => `¥${v?.toFixed(2)}` },
-          { title: '创建时间', dataIndex: 'createTime', width: 170 },
-          {
-            title: '操作', width: 180,
-            render: (_, r) => (
-              <Space>
-                <a onClick={() => showDetail(r.id)}>详情</a>
-                <a onClick={() => openEdit(r)}>编辑</a>
-                <Popconfirm title="确认删除该会员？" onConfirm={() => handleDelete(r.id)}>
-                  <a style={{ color: 'red' }}>删除</a>
-                </Popconfirm>
-              </Space>
-            ),
-          },
-        ]}
+        request={async (params) => {
+          const res = await pageMember({
+            pageNum: params.current || 1,
+            pageSize: params.pageSize || 20,
+            keyword,
+          });
+          return {
+            data: res.data || [],
+            success: true,
+            total: (res as any).page?.total || 0,
+          };
+        }}
       />
 
       <Modal
@@ -251,6 +257,6 @@ export default function MemberList() {
           </>
         )}
       </Drawer>
-    </Card>
+    </PageContainer>
   );
 }

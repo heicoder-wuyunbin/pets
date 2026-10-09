@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
-  Card, Statistic, Row, Col, Table, Progress, Space, Spin, Empty, InputNumber, Button, Tag,
+  Table, Progress, Space, Spin, Empty, InputNumber, Button, Tag,
 } from 'antd';
+import { PageContainer, ProCard, StatisticCard } from '@ant-design/pro-components';
 import { memberStat, reportTrend, reportLost } from '@/api/report';
 import type { MemberStatVO, TrendVO, LostMemberVO } from '@/types/m6';
 
@@ -27,8 +28,8 @@ export default function ReportStat() {
   const maxConsume = Math.max(1, ...trend.map((t) => t.consume || 0));
 
   return (
-    <div>
-      <Card style={{ marginBottom: 16 }}>
+    <PageContainer title="用户报表">
+      <ProCard style={{ marginBottom: 16 }}>
         <Space>
           <span>趋势天数：</span>
           <InputNumber min={1} max={90} value={days} onChange={(v) => setDays(v || 7)} />
@@ -36,27 +37,26 @@ export default function ReportStat() {
           <InputNumber min={1} max={365} value={lostDays} onChange={(v) => setLostDays(v || 30)} />
           <Button type="primary" onClick={refreshAll}>刷新</Button>
         </Space>
-      </Card>
+      </ProCard>
 
       <Spin spinning={loading}>
         {/* 会员统计卡片 */}
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col span={6}><Card><Statistic title="会员总数" value={stat?.totalMember || 0} /></Card></Col>
-          <Col span={6}><Card><Statistic title="今日新增" value={stat?.newMemberToday || 0} valueStyle={{ color: '#3f8600' }} /></Card></Col>
-          <Col span={6}><Card><Statistic title="今日活跃" value={stat?.activeMemberToday || 0} /></Card></Col>
-          <Col span={6}>
-            <Card title="等级分布">
-              <Space wrap>
-                {stat?.levelDist?.length ? stat.levelDist.map((l) => (
-                  <Tag key={l.level} color="blue">Lv.{l.level}: {l.count}</Tag>
-                )) : <span>-</span>}
-              </Space>
-            </Card>
-          </Col>
-        </Row>
+        <StatisticCard.Group direction="row" style={{ marginBottom: 16 }}>
+          <StatisticCard statistic={{ title: '会员总数', value: stat?.totalMember || 0 }} />
+          <StatisticCard statistic={{ title: '今日新增', value: stat?.newMemberToday || 0, valueStyle: { color: '#3f8600' } }} />
+          <StatisticCard statistic={{ title: '今日活跃', value: stat?.activeMemberToday || 0 }} />
+        </StatisticCard.Group>
+
+        <ProCard title="等级分布" style={{ marginBottom: 16 }}>
+          <Space wrap>
+            {stat?.levelDist?.length ? stat.levelDist.map((l) => (
+              <Tag key={l.level} color="blue">Lv.{l.level}: {l.count}</Tag>
+            )) : <span>-</span>}
+          </Space>
+        </ProCard>
 
         {/* 消费趋势 */}
-        <Card title="消费/充值趋势" style={{ marginBottom: 16 }}>
+        <ProCard title="消费/充值趋势" style={{ marginBottom: 16 }}>
           {trend.length === 0 ? <Empty /> : (
             <Table
               rowKey="date"
@@ -94,10 +94,10 @@ export default function ReportStat() {
               ]}
             />
           )}
-        </Card>
+        </ProCard>
 
         {/* 流失预警 */}
-        <Card title={<>流失预警 <Tag color="orange">超过 {lostDays} 天未消费</Tag></>}>
+        <ProCard title={<>流失预警 <Tag color="orange">超过 {lostDays} 天未消费</Tag></>}>
           {lost.length === 0 ? <Empty description="暂无流失会员" /> : (
             <Table
               rowKey="id"
@@ -114,8 +114,8 @@ export default function ReportStat() {
               ]}
             />
           )}
-        </Card>
+        </ProCard>
       </Spin>
-    </div>
+    </PageContainer>
   );
 }

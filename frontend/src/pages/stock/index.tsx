@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  Card, Table, Tag, Input, Select, Space, Modal, InputNumber, message,
+  Tag, Input, Select, Space, Modal, InputNumber, message,
 } from 'antd';
 import { pageStock, setStockWarnQty } from '@/api/stock';
+import { PageContainer, ProTable } from '@ant-design/pro-components';
 import type { StockVO, StockPageReq } from '@/types/m4';
 
 export default function StockIndex() {
@@ -39,7 +40,7 @@ export default function StockIndex() {
   };
 
   return (
-    <Card>
+    <PageContainer title="商品库存">
       <Space wrap style={{ marginBottom: 16 }}>
         <Select
           placeholder="显示"
@@ -59,7 +60,9 @@ export default function StockIndex() {
         />
       </Space>
 
-      <Table
+      <ProTable<StockVO>
+        search={false}
+        options={{ reload: loadData, density: true, setting: true }}
         rowKey="id"
         loading={loading}
         dataSource={data}
@@ -74,13 +77,13 @@ export default function StockIndex() {
           { title: 'SKU ID', dataIndex: 'skuId', width: 120 },
           {
             title: '当前库存', dataIndex: 'quantity', width: 110,
-            render: (v: number, r: StockVO) => {
-              const warn = (r.warnQty || 0) > 0 && v <= r.warnQty;
-              return <Tag color={warn ? 'red' : 'green'}>{v}</Tag>;
+            render: (_, r: StockVO) => {
+              const warn = (r.warnQty || 0) > 0 && r.quantity <= r.warnQty;
+              return <Tag color={warn ? 'red' : 'green'}>{r.quantity}</Tag>;
             },
           },
           { title: '预警阈值', dataIndex: 'warnQty', width: 100 },
-          { title: '均价', dataIndex: 'avgCost', width: 100, render: (v: number) => `¥${v?.toFixed(2)}` },
+          { title: '均价', dataIndex: 'avgCost', width: 100, render: (_, r: StockVO) => `¥${r.avgCost?.toFixed(2)}` },
           { title: '更新时间', dataIndex: 'updateTime', width: 170 },
           {
             title: '操作', width: 120,
@@ -111,6 +114,6 @@ export default function StockIndex() {
           当库存数量小于等于该值时标记为预警
         </div>
       </Modal>
-    </Card>
+    </PageContainer>
   );
 }
