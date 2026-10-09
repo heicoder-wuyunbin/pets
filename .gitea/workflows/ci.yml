@@ -1,0 +1,66 @@
+name: CI Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: self-hosted
+    container:
+      image: pets/ci-runner:1.0.0
+      options: --network=host
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /etc/rancher/k3s/k3s.yaml:/root/.kube/config:ro
+        - /root/.ssh:/root/.ssh
+    steps:
+      - name: Checkout
+        run: |
+          rm -rf /workspace/src
+          git clone http://${{ secrets.GITEA_TOKEN }}@192.168.100.128:30000/pets/pets.git /workspace/src
+          cd /workspace/src
+          git checkout ${{ github.sha }}
+
+      - name: Detect changed services
+        id: changes
+        run: |
+          cd /workspace/src
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ] || [ -z "$BEFORE" ]; then
+            CHANGED=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "ALL")
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "$AFTER")
+          fi
+          echo "Changed files:"; echo "$CHANGED"
+          ALL="auth-service goods-service market-service member-service report-service shop-service stock-service system-service trade-service pets-gateway"
+          SVCS=""
+          for s in $ALL; do
+            if echo "$CHANGED" | grep -qE "(^|/)(services/)?$s/"; then SVCS="$SVCS $s"; fi
+          done
+          if echo "$CHANGED" | grep -qE "^(pets-common|pets-id-generator|pom.xml|\.gitea/|deploy/)"; then SVCS="$ALL"; fi
+          if [ -z "$SVCS" ] || echo "$CHANGED" | grep -q "ALL"; then SVCS="$ALL"; fi
+          SVCS=$(echo $SVCS | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          echo "Services to build: $SVCS"
+          echo "svcs=$SVCS" >> $GITHUB_OUTPUT
+
+      - name: Build & Deploy
+        run: |
+          cd /workspace/src
+          SVCS="${{ steps.changes.outputs.svcs }}"
+          echo "Building services: $SVCS"
+          for svc in $SVCS; do
+            if [ "$svc" = "pets-gateway" ]; then ctx=pets-gateway; else ctx=services/$svc; fi
+            img=pets/$svc:1.0.0
+            echo "===== build $svc ====="
+            mvn -q -B package -pl "$ctx" -am -DskipTests
+            docker build -t "$img" "$ctx"
+            for node in 192.168.100.128 192.168.100.129 192.168.100.130; do
+              echo "--> distribute $img to $node"
+              docker save "$img" | ssh -o StrictHostKeyChecking=no root@$node "k3s ctr images import -n k8s.io -"
+            done
+            echo "--> rollout restart $svc"
+            kubectl rollout restart "deployment/$svc" -n app
+          done
+          echo "DONE"

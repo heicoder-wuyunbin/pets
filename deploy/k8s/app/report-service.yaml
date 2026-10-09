@@ -23,8 +23,6 @@ spec:
       labels:
         app: report-service
     spec:
-      nodeSelector:
-        app-host: w2
       containers:
       - name: report-service
         # 本地构建镜像, 不从远程拉取

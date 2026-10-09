@@ -7,6 +7,9 @@ target/
 *.ear
 *.nar
 
+# ===== Agent 本地记忆（不入库） =====
+.workbuddy/
+
 # ===== 日志与临时文件 =====
 *.log
 *.logs

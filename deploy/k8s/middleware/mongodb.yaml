@@ -67,21 +67,13 @@ spec:
         - name: data
           mountPath: /data/db
         readinessProbe:
-          exec:
-            command:
-            - mongosh
-            - --quiet
-            - --eval
-            - "db.adminCommand('ping')"
+          tcpSocket:
+            port: 27017
           initialDelaySeconds: 15
           periodSeconds: 10
         livenessProbe:
-          exec:
-            command:
-            - mongosh
-            - --quiet
-            - --eval
-            - "db.adminCommand('ping')"
+          tcpSocket:
+            port: 27017
           initialDelaySeconds: 60
           periodSeconds: 30
       volumes:

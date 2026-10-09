@@ -23,8 +23,6 @@ spec:
       labels:
         app: auth-service
     spec:
-      nodeSelector:
-        app-host: w1
       containers:
       - name: auth-service
         # 本地构建镜像, 不从远程拉取

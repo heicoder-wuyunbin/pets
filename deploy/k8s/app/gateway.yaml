@@ -23,8 +23,6 @@ spec:
       labels:
         app: pets-gateway
     spec:
-      nodeSelector:
-        app-host: w1
       containers:
       - name: pets-gateway
         image: pets/gateway:1.0.0

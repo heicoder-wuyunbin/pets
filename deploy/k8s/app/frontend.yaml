@@ -23,8 +23,6 @@ spec:
       labels:
         app: frontend
     spec:
-      nodeSelector:
-        app-host: w1
       containers:
       - name: frontend
         image: pets/frontend:1.0.0

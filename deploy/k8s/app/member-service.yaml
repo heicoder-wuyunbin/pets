@@ -23,8 +23,6 @@ spec:
       labels:
         app: member-service
     spec:
-      nodeSelector:
-        app-host: w2
       containers:
       - name: member-service
         # 本地构建镜像, 不从远程拉取
