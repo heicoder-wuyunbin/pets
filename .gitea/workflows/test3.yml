@@ -1,4 +1,5 @@
 name: test3-runner-mode
+# trigger re-run to validate runner-mode after freeing the queue
 on:
   push:
     branches: [main]
