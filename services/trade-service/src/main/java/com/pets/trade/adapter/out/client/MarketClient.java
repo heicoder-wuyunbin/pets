@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * market-service 营销优惠计算 Feign 客户端。
  */
-@FeignClient(name = "market-service", contextId = "marketClient", url = "${market.service.url:http://localhost:9008}")
+@FeignClient(name = "market-service", contextId = "marketClient", url = "${market.service.url:lb://market-service}")
 public interface MarketClient {
 
     @PostMapping("/api/v1/marketing/calculate")

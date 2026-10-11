@@ -43,6 +43,8 @@
         <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
         <!-- MyBatis-Plus 3.5.17 (Spring Boot 4 starter) -->
         <mybatis-plus.version>3.5.17</mybatis-plus.version>
+        <!-- Knife4j Next 5.7.6 (Spring Boot 4 专用, 社区维护版) -->
+        <knife4j.version>5.7.6</knife4j.version>
         <!-- JJWT 0.13.0 -->
         <jjwt.version>0.13.0</jjwt.version>
         <!-- Lombok -->
@@ -79,6 +81,17 @@
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-jsqlparser</artifactId>
                 <version>${mybatis-plus.version}</version>
+            </dependency>
+            <!-- Knife4j Next (Spring Boot 4 专用 starter) -->
+            <dependency>
+                <groupId>com.baizhukui</groupId>
+                <artifactId>knife4j-openapi3-boot4-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baizhukui</groupId>
+                <artifactId>knife4j-gateway-boot4-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
             </dependency>
             <!-- JJWT -->
             <dependency>

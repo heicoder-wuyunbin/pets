@@ -1,0 +1,143 @@
+# ============================================================
+# Pets 基础中间件 - docker-compose (单节点 Docker 主机)
+# 目标主机: 192.168.110.200 (root, 公钥登录)
+# 说明: 全部使用本机已拉取的镜像, 不依赖联网 pull
+#   服务          镜像                        对外端口
+#   mysql     mysql:8.0.29                3306   (root/root, 库 pets + nacos)
+#   redis     redis:7.0.4                 6379   (无密码, appendonly)
+#   mongodb   mongo:4.4                   27017  (root/root, authSource=admin, 库 pets)
+#   nacos     nacos/nacos-server:v3.2.4   8848/8080/9848 (standalone, 外部 MySQL 持久化)
+#
+# 注: 原 k8s 中还含 Meilisearch(本地无镜像, 且代码未实际连接) 与
+#     RocketMQ(占位, 代码未使用), 此处暂未纳入。需要时可单独补充。
+# ============================================================
+
+networks:
+  pets-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  mongodb-data:
+
+services:
+  # ---------------- MySQL 8 ----------------
+  mysql:
+    image: mysql:8.0.29
+    container_name: pets-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      TZ: "Asia/Shanghai"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - pets-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------- Redis 7 ----------------
+  redis:
+    image: redis:7.0.4
+    container_name: pets-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--bind", "0.0.0.0"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - pets-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---------------- MongoDB 4.4 ----------------
+  mongodb:
+    image: mongo:4.4
+    container_name: pets-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "root"
+      MONGO_INITDB_DATABASE: "pets"
+      TZ: "Asia/Shanghai"
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+    networks:
+      - pets-net
+    healthcheck:
+      test:
+        - CMD
+        - mongo
+        - --quiet
+        - --eval
+        - "db.runCommand({ ping: 1 }).ok"
+        - -u
+        - root
+        - -p
+        - root
+        - --authenticationDatabase
+        - admin
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ---------------- Nacos 3.2.4 (standalone) ----------------
+  # 注: 原 v3.0.2 存在"空库启动 config_info 命名空间迁移预检查崩溃"的已知 bug,
+  # 升级到 3.2.4 (与 k8s 部署目标版本一致) 以规避。
+  nacos:
+    image: nacos/nacos-server:v3.2.4
+    container_name: pets-nacos
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MODE: "standalone"
+      PREFER_HOST_MODE: "hostname"
+      # 数据库配置 (Nacos 3.x: spring.sql.init.platform + db.*)
+      SPRING_SQL_INIT_PLATFORM: "mysql"
+      DB_NUM: "1"
+      DB_URL_0: "jdbc:mysql://mysql:3306/nacos?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true"
+      DB_USER: "root"
+      DB_PASSWORD: "root"
+      # 鉴权 (开发环境开启)
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_IDENTITY_KEY: "nacos"
+      NACOS_AUTH_IDENTITY_VALUE: "nacos"
+      NACOS_AUTH_TOKEN: "SecretKey012345678901234567890123456789012345678901234567890123456789"
+      NACOS_AUTH_TOKEN_EXPIRE_SECONDS: "18000"
+      # JVM
+      JVM_XMS: "512m"
+      JVM_XMX: "512m"
+      JVM_XMN: "256m"
+      NACOS_SERVER_TZ: "Asia/Shanghai"
+      # 关闭 Nacos 3.0 的"命名空间兼容模式"(默认开启), 该模式会触发
+      # config_info 命名空间迁移预检查, 在空库启动时因 config_info 表尚未
+      # 建好而崩溃。关闭后由 Nacos 正常完成建表(含 naming 表)与默认用户初始化。
+      JAVA_OPT_EXT: "-Dnacos.config.namespace.compatible.mode=false"
+    ports:
+      - "8848:8848"
+      - "8080:8080"
+      - "9848:9848"
+    networks:
+      - pets-net

@@ -1,10 +1,10 @@
 // ============================================================
 // 宠老板复刻 · M1 登录鉴权 · MongoDB 初始化脚本
 // 集合: sms_code (短信验证码留痕) / login_log (登录日志)
-// 用法: mongosh "mongodb://localhost:27017/pets" 01-auth-init.js
+// 用法: mongosh "mongodb://root:root@192.168.110.200:27017/pets_auth?authSource=admin" 01-auth-init.js
 // ============================================================
 
-db = db.getSiblingDB('pets');
+db = db.getSiblingDB('pets_auth');
 
 // ============================================================
 // 1. sms_code 集合 — 短信验证码留痕
