@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * {@code @MapperScan} 仅扫描标注 {@link Mapper} 的接口，
  * 避免 MyBatis 把同包下的 MongoDB Repository 也当作 Mapper 代理。
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.pets.auth", "com.pets.common"})
 @MapperScan(basePackages = {"com.pets.auth.adapter.out", "com.pets.id.repo"}, annotationClass = Mapper.class)
 public class AuthApplication {
 
